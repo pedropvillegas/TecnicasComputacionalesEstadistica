@@ -1,0 +1,51 @@
+---
+title: "Clase 5 26/09/2019"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+
+```{r}
+est <- c(165, 187, 156, 162, 158,
+         164, 170, 160, 185, 175)
+
+peso <- c(55, 96, 50, 59, 58, 84,
+          50, 90, 80)
+
+plot(x = est, y = peso, pch = 20)
+rug(x = est, col = "red")
+
+plot(density/(est))
+
+# simulacion
+
+n <- 500
+
+est.r <- runif(n = n, min = 150, max = 200)
+media <- -194 + 1.55*est.r
+peso.r <- rnorm(n = n, mean = media, sd = 6.1)
+plot()
+
+mod.r <- lm(peso ~ est.r)
+summary(mod.r)
+
+```
+
+Error cuadrático medio
+
+Escribir el modelo simulado
+
+Crear una figura donde se observe la estabilización del modelo simulado
+
+n= tamaño de muestra
+m= tamaño de simulación con tamaño de muestra n
+
+Para día martes
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
