@@ -1,0 +1,81 @@
+---
+title: "Capitulo 3"
+author: "Pedro Pablo Villegas"
+date: "19/9/2019"
+output: pdf_document
+---
+
+# VON NEUMANN
+
+* Semilla con 5 dígitos
+* Elevar al cuadrado con 10 dígitos (poner ceros iniciales si se necesita)
+* Seleccionar los 5 números centrales
+* Comenzar nuevamente
+
+```{r, eval=FALSE, echo=TRUE}
+
+vonNeumann <- function(n, semilla) {
+    semilla <- as.character(semilla)
+    if (nchar(semilla) <= 5)
+        paste(rep("0", 5 - nchar(semilla)), semilla)
+        while (i <= n) {
+           resultados <- numeric(length = n)
+           resultados[i] <- sqrt(semilla)
+        }
+    else
+        return("Error, por favor introduzca una semilla con cinco dígitos máximo")
+}
+
+```
+
+# GENERADOR LINEAL CONGRUENCIAL
+
+Es un algoritmo para generar números cuasialeatorios
+
+$$
+x_{i} = ax_{i-1} + c \quad Mod \quad M, \quad para \quad i \geq1
+$$
+
+donde:
+
+* $a$ es el multiplicador
+* $c$ es el incremento
+* $M$ es el módulo
+* $x_{0}$ es la semilla con $x_{0} < M$
+
+Para obtener la secuencia de números pseudo aleatorios, usamos:
+
+$$
+y_{i} = \frac{x_i}{M}
+$$
+El algorito empleado es de la forma:
+
+```{r, eval=TRUE, echo=TRUE}
+lcg <- function(x0, a, c, M){
+    x <- numeric(M)
+    y <- numeric(M)
+    x[1] <- (a*x0 + c) %% M
+    y[1] <- x[1]/M
+    i <- 2
+    while (i <= M) {
+        x[i] <- (a*x[i - 1] + c) %% M
+        y[i] <- x[i]/M
+        i <- i + 1
+    }
+    return(list(x = x, y = y))
+}
+```
+
+El período de la función _lcg_ es a lo máximo __M__ y para algunas elecciones de los factores, mucho menos que eso.
+
+Suponiendo que $x0 = 5$, $a = 3$, $c = 7$ y $M = 113$
+
+```{r, eval=TRUE, echo=FALSE}
+
+lcg.res <- lcg(5, 3, 7, 113)
+
+plot(x = lcg.res$y[1:112], y = lcg.res$y[-1], xlab = "x", ylab = "x-1")
+
+```
+
+# EVALUAR LA 
