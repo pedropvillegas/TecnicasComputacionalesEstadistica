@@ -2,7 +2,9 @@
 title: "Capitulo 3"
 author: "Pedro Pablo Villegas"
 date: "19/9/2019"
-output: pdf_document
+output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 # VON NEUMANN
@@ -23,7 +25,7 @@ vonNeumann <- function(n, semilla) {
            resultados[i] <- sqrt(semilla)
         }
     else
-        return("Error, por favor introduzca una semilla con cinco dígitos máximo")
+        return("Error")
 }
 
 ```
@@ -48,16 +50,17 @@ Para obtener la secuencia de números pseudo aleatorios, usamos:
 $$
 y_{i} = \frac{x_i}{M}
 $$
+
 El algorito empleado es de la forma:
 
 ```{r, eval=TRUE, echo=TRUE}
-lcg <- function(x0, a, c, M){
-    x <- numeric(M)
-    y <- numeric(M)
+lcg <- function(x0, a, c, M, n){
+    x <- numeric(n)
+    y <- numeric(n)
     x[1] <- (a*x0 + c) %% M
     y[1] <- x[1]/M
     i <- 2
-    while (i <= M) {
+    while (i <= n) {
         x[i] <- (a*x[i - 1] + c) %% M
         y[i] <- x[i]/M
         i <- i + 1
@@ -66,16 +69,271 @@ lcg <- function(x0, a, c, M){
 }
 ```
 
-El período de la función _lcg_ es a lo máximo __M__ y para algunas elecciones de los factores, mucho menos que eso.
+El período de la función `lcg` es a lo máximo **M** y para algunas elecciones de los factores, mucho menos que eso.
 
-Suponiendo que $x0 = 5$, $a = 3$, $c = 7$ y $M = 113$
+# PERFORMANCE DEL GENERADOR DE NÚMEROS ALEATORIOS
 
-```{r, eval=TRUE, echo=FALSE}
+Para evaluar el rendimiento del generador de números aleatorios, generalmente se chequea:
 
-lcg.res <- lcg(5, 3, 7, 113)
+* Diagrama de dispersión de $x_{n+1}$ vs. $x_{n}$
+* Prueba de Kolmogorov-Smirnov para U(0, 1) vía `ks.test`
+* Explorando la función de autocorrelación parcial _PACF_ con `pacf`
 
-plot(x = lcg.res$y[1:112], y = lcg.res$y[-1], xlab = "x", ylab = "x-1")
+## Generador Lineal Congruencial `lcg()`
+
+```{r, eval=TRUE, echo=TRUE}
+
+lcg.res <- lcg(5, 3, 7, 113, 226)
+
+plot(x = lcg.res$y[1:225], y = lcg.res$y[-1], xlab = "x", ylab = "x-1")
+
+barplot(lcg.res$y)
+
+ks.test(lcg.res$y, 'punif')$p.value
+
+pacf(lcg.res$y)
 
 ```
 
-# EVALUAR LA 
+# NÚMEROS PSEUDO-ALEATORIOS Y QUASI-ALEATORIOS
+
+Los únicos cosas que son realmente aleatorias, son las mediciones de fenómenos físicos. La única forma de simular aleatoriedad en los computadores es a través de algoritmos determinísticos. Existen dos formas para generar aleatoriedad: pseudo y quasi.
+
+## Números pseudo-aleatorios
+
+Los métodos pseudo-aleatorios buscan simular _aleatoriedad_
+
+### Linear congruential generators
+
+$$
+x_n = (ax_{n-1}+c) \quad mod \quad m
+$$
+
+### Multiple recursive generators
+
+$$
+x_n = (a_{1}x_{n-1}+\ldots+a_{k}x_{n-k}c) \quad mod \quad m
+$$
+
+`runif (RNG)`
+
+### Mersenne-Twister
+
+`runif`
+
+### Well equidistributed long-period linear generators
+
+### SIMD-oriented Fast Mersenne Twister algorithms
+
+## Números quasi-aleatorios
+
+Los métodos quasi-aleatorios son determinísticos pero buscan estar equidistribuidos
+
+Monte Carlo para integrar, no buscan la aleatoriedad sino una buena quidistribución, son secuencias de números.
+
+### Van der Corput sequences
+
+### Halton sequences
+
+# USAR NÚMEROS ALEATORIOS PARA EVALUAR INTEGRALES
+
+Sea $g(x)$ una función y queremos encontrar $\theta$ tal que:
+
+$$
+\theta = \int_0^1g(x)dx
+$$
+
+Si _U_ es uniformemente distribuído sobre el mismo soporte que $g(x)$, entonces podemos expresar $\theta$ como $E[g(U)]$
+
+## Para resolver integrales entre $a$ y $b$
+
+Si $\theta = \int_a^bg(x)dx$ con $a < b$, hacemos la siguiente sustitución:
+
+$$
+y = \frac{x-a}{b-a}
+$$
+$$
+dy = \frac{dx}{b-a}
+$$
+
+La nueva integral es:
+
+$$
+\theta = \int_a^bg(x)dx=\int_0^1g((b-a)y+a)(b-a)d(y)=\int_0^1h(y)dy
+$$
+
+donde $h(y) = g((b-a)y+a)(b-a)$
+
+* Evaluar la integral $\int_0^{2\pi}\sin(x)dx$ usando simulación Monte Carlo
+
+```{r, eval=TRUE, echo=TRUE}
+a <- 0
+b <- 2*pi
+n <- 10000
+gx <- function(x) sin(x)
+hy <- function(y) gx(a + (b - a)*y)*(b - a)
+u <- runif(n)
+mean(hy(u))
+
+vab <- seq(a, b, 0.01)
+v01 <- seq(0, 1, 0.01)
+
+plot(x = vab, y = gx(vab), type = "l", col = "blue", xlab = "", ylab = "",
+     ylim = c(-6, 6), frame = FALSE)
+lines(x = v01, y = hy(v01), type = "l", col = "red")
+legend("topright", legend = c("g(x)", "h(y)"), lty = c(1, 1),
+       col = c("blue", "red"), bg = "transparent", bty = "n", cex = 0.8)
+
+```
+
+Evaluar la integral $\int_{\pi}^{3\pi}\cos(x)dx$ usando simulación Monte Carlo
+
+```{r, eval=TRUE, echo=TRUE}
+a <- pi
+b <- 3*pi
+n <- 100000
+gx <- function(x) {
+    cos(x)
+}
+
+hy <- function(y) {
+    gx(a + (b - a)*y)*(b - a)
+}
+
+u <- runif(n)
+
+mean(hy(u))
+
+vab <- seq(a, b, 0.01)
+
+v01 <- seq(0, 1, 0.01)
+
+plot(x = vab, y = gx(vab), type = "l", col = "blue", xlab = "", ylab = "",
+     ylim = c(-6, 6), xlim = c(0, 10), frame = FALSE)
+lines(x = v01, y = hy(v01), type = "l", col = "red")
+legend("topright", legend = c("g(x)", "h(y)"), lty = c(1, 1),
+       col = c("blue", "red"), bg = "transparent", bty = "n", cex = 0.8)
+
+```
+
+## Otra forma de resolver la integral entre $a$ y $b$
+
+Generar un número aleatorio uniforme $U_{i}$ de $U(a, b)$ y luego obtener la integral usando:
+
+$$
+\theta = \int_{a}^{b}g(x)dx = (b-a)\times\sum_{i=1}^{k}\frac{g(U_{i})}{k}
+$$
+
+* Obtener la integral de $\theta = \int_{-1}^{1}e^{x+{x}^{2}}dx$ usando el método anterior
+
+```{r, eval=TRUE, echo=TRUE}
+a <- -1
+b <- 1
+n <- 10000
+u <- runif(n, min = a, max = b)
+f <- function(x){
+    exp(x + x^2)
+}
+int <- (b - a)*mean(f(u))
+```
+
+## Resolver integrales entre $0$ e $\infty$
+
+Si $\theta = \int_{0}^{\infty}g(x)dx$ podemos hacer el cambio de variable:
+
+$$
+y = \frac{1}{x+1}
+$$
+$$
+dy = \frac{-dx}{(x+1)^{2}}=-y^{2}dx
+$$
+
+Y obtenemos la nueva integral:
+
+$$
+\theta=\int_{0}^{\infty}g(x)dx = \int_{1}^{0}\frac{g(\frac{1}{y-1})}{-y^2}dy=\int_{0}^{1}\frac{g(\frac{1}{y-1})}{y^2}dy=\int_{0}^{1}h(y)dy
+$$
+
+Donde $h(y)=\frac{g(\frac{1}{y-1})}{y^2}$
+
+* $\int_{0}^{\infty}e^{-x}dx$
+
+```{r, eval=TRUE, echo=TRUE}
+
+g <- function(x) exp(-x)
+
+h <- function(y) g(1 / (y - 1))/(y^2)
+
+u <- runif(n = 10000)
+
+mean(h(u))
+
+vab <- seq(a, b, 0.01)
+
+v01 <- seq(0, 1, 0.01)
+
+plot(x = vab, y = gx(vab), type = "l", col = "blue", xlab = "", ylab = "",
+     ylim = c(-6, 6), xlim = c(0, 10), frame = FALSE)
+lines(x = v01, y = hy(v01), type = "l", col = "red")
+legend("topright", legend = c("g(x)", "h(y)"), lty = c(1, 1),
+       col = c("blue", "red"), bg = "transparent", bty = "n", cex = 0.8)
+```
+
+
+## Integrales multidimensionales
+
+```{r, eval=TRUE, echo=TRUE}
+fun <- function(x) exp(-x[1] - x[2])
+k <- 5
+U <- matrix(runif(n = 2*k), ncol = 2)
+mean(apply(X = U, MARGIN = 1, FUN = fun))
+
+k <- c(10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000)
+
+multi <- function(n){
+    fun <- function(x) exp(-x[1] - x[2])
+    i = 1
+    for (i in 1:length(k)) {
+        U <- matrix(runif(n = 2*k[i]), ncol = 2)
+        resultados[i,1] <- k[i]
+        resultados[i,2] <- mean(apply(X = U, MARGIN = 1, FUN = fun))
+        i <- i + 1
+    }
+    return(resultados)
+}
+
+res <- multi(1000)
+
+plot(x = res[,1], y = res[,2], type = "b", xlab = "k", ylab = "resultado")
+
+?persp()
+```
+ 
+ * $\int_{0}^{1}\int_{0}^{1}xy^2dxdy$
+ 
+```{r, eval=TRUE, echo=TRUE}
+fun <- function(x) exp(x[1] * x[2]^2)
+k <- 20
+U <- matrix(runif(n = 2*k), ncol = 2)
+mean(apply(X = U, MARGIN = 1, FUN = fun))
+
+k <- c(10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000)
+
+multi <- function(n){
+    fun <- function(x) exp(-x[1] - x[2])
+    i = 1
+    for (i in 1:length(k)) {
+        U <- matrix(runif(n = 2*k[i]), ncol = 2)
+        resultados[i,1] <- k[i]
+        resultados[i,2] <- mean(apply(X = U, MARGIN = 1, FUN = fun))
+        i <- i + 1
+    }
+    return(resultados)
+}
+
+res <- multi(1000)
+
+plot(x = res[,1], y = res[,2], type = "b", xlab = "k", ylab = "resultado")
+
+?persp()
+```
