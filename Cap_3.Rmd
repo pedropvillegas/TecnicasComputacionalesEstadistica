@@ -17,17 +17,26 @@ editor_options:
 ```{r, eval=FALSE, echo=TRUE}
 
 vonNeumann <- function(n, semilla) {
-    semilla <- as.character(semilla)
-    if (nchar(semilla) <= 5)
-        paste(rep("0", 5 - nchar(semilla)), semilla)
-        while (i <= n) {
-           resultados <- numeric(length = n)
-           resultados[i] <- sqrt(semilla)
-        }
-    else
-        return("Error")
+  resultados <- numeric(length = n)
+  resultados[1] <- semilla
+  i <- 2
+    while (i <= n) {
+      resultados[i] <- 
+        as.numeric(substr(
+          resultados[i - 1]^2,
+          nchar(resultados[i - 1]^2) - 7,
+          nchar(resultados[i - 1]^2) - 3))
+      i <- i + 1
+    }
+  return(resultados)
 }
 
+res <- vonNeumann(n = 100, semilla = 3001)
+
+plot(x = res[1:length(res)-1], y = res[-1], type = "p")
+barplot(res[1:50])
+ks.test(res[1:50], "punif")$p.value
+pacf(res[1:50])
 ```
 
 # GENERADOR LINEAL CONGRUENCIAL
