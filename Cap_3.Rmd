@@ -3,8 +3,9 @@ title: "Capitulo 3"
 author: "Pedro Pablo Villegas"
 date: "19/9/2019"
 output:
+  html_document: 
+    toc: yes
   pdf_document: default
-  html_document: default
 editor_options:
   chunk_output_type: console
 ---
@@ -33,7 +34,7 @@ vonNeumann <- function(n, semilla) {
   return(resultados)
 }
 
-res <- vonNeumann(n = 100, semilla = 3001)
+res <- vonNeumann(n = 1000, semilla = 99999)
 
 plot(x = res[1:length(res)-1], y = res[-1], type = "p")
 barplot(res[1:50])
@@ -80,7 +81,7 @@ lcg <- function(x0, a, c, M, n){
 }
 ```
 
-El período de la función `lcg` es a lo máximo **M** y para algunas elecciones de los factores, mucho menos que eso.
+El período de la función `lcg()` es a lo máximo **M** y para algunas elecciones de los factores, mucho menos que eso.
 
 # PERFORMANCE DEL GENERADOR DE NÚMEROS ALEATORIOS
 
@@ -261,14 +262,28 @@ $$
 * Obtener la integral de $\theta = \int_{-1}^{1}e^{x+{x}^{2}}dx$ usando el método anterior
 
 ```{r, eval=TRUE, echo=TRUE}
+# Primer método, cambio de límites -----------------------------------
+
+curve(exp(x + x^2), from = -1, to = 1, frame = FALSE)
+abline(v = 0)
+
 a <- -1
 b <- 1
-n <- 10000
+n <- 100
+g <- function(x) exp(x + x^2)
+h <- function(y) g(a + y*(b - a))*(b - a)
+u <- runif(n)
+int.1 <- mean(h(u))
+int.1
+
+# Segundo metodo, aleatorios entre los límites -----------------------
+
 u <- runif(n, min = a, max = b)
 f <- function(x){
     exp(x + x^2)
 }
-int <- (b - a)*mean(f(u))
+int.2 <- (b - a)*mean(f(u))
+int.2
 ```
 
 ## Resolver integrales entre $0$ e $\infty$
@@ -276,10 +291,10 @@ int <- (b - a)*mean(f(u))
 Si $\theta = \int_{0}^{\infty}g(x)dx$ podemos hacer el cambio de variable:
 
 $$
-y = \frac{1}{x+1}
-$$
-$$
+\begin{gather}
+y = \frac{1}{x+1} \\
 dy = \frac{-dx}{(x+1)^{2}}=-y^{2}dx
+\end{gather}
 $$
 
 Y obtenemos la nueva integral:
@@ -311,12 +326,15 @@ $$
 
 ```{r, eval=TRUE, echo=TRUE}
 
-curve(exp(-x), frame = FALSE, from = 0, to = 6)
+curve(exp(-x), frame = FALSE, from = -3, to = 3)
+abline(v = 0)
 
+n <- 1000
 g <- function(x) exp(-x)
 h <- function(y) g((1 / y) - 1)/(y^2)
-u <- runif(n = 1000)
-mean(h(u))
+u <- runif(n = n)
+res <- mean(h(u))
+res
 
 vab <- seq(0, 3, 0.1)
 v01 <- seq(0, 1, 0.01)
@@ -327,21 +345,47 @@ lines(x = v01, y = h(v01), type = "l", col = "red")
 abline(h = 0, col = "black", lty = 2)
 legend("topright", legend = c("g(x)", "h(y)"), lty = c(1, 1),
        col = c("blue", "red"), bg = "transparent", bty = "n", cex = 0.8)
+abline(v = 1)
 ```
 
+## Integrales entre $-\infty$ e $\infty$
+
+* Si la función es par, la integral en el rango $(-\infty, \infty)$ es dos veces la integral en el rango $(0, \infty)$
+* Si la función no es par, se debe partir el rango $(-\infty, \infty)$ en:
++ $(0, \infty)$ donde se hace el cambio de variable para $(0, 1)$
++ $(-\infty, 0)$ donde se hace el cambio de signo de $g(-x)$ para hacer el cambio de límites $(0, \infty)$ y luego hacer el reemplazo de límites a $(0, 1)$
 
 ## Integrales multidimensionales
 
+La aproximación de integrales usando el método de Monte Carlo se hace más interesante cuando se trata de aproximar integrales multivariables.
+
+$$
+\begin{gather}
+\theta = \int_{0}^{1}\int_{0}^{1}\ldots\int_{0}^{1}g(x_1, x_2, \ldots,x_n)dx_1dx_2\ldots,dx_n \\
+\theta = E[g(U_1,U_2,\ldots,U_n)]
+\end{gather}
+$$
+
+* Explore el efecto de $k$ en la estimación de la integral de $g(-x_1, x_2) = exp(-x_1-x_2)$ en el plano $(0, 1)\times(0, 1)$
+
 ```{r, eval=FALSE, echo=TRUE}
-fun <- function(x) exp(-x[1] - x[2])
+
+x <- seq(0, 1, length = 100)
+y <- x
+f <- function(x, y) {exp(-x-y)}
+z <- outer(x, y, f)
+persp(x = x, y = y, z = z, theta = 30, phi = 20, expand = 0.5, col = "lightblue", ltheta = 45, shade = 0.75, ticktype = "detailed",
+      xlab = "X", ylab = "Y", zlab = "exp(-x-y)")
+
+g <- function(x) exp(-x[1] - x[2])
 k <- 5
 U <- matrix(runif(n = 2*k), ncol = 2)
-mean(apply(X = U, MARGIN = 1, FUN = fun))
+mean(apply(X = U, MARGIN = 1, FUN = g))
 
 k <- c(10, 20, 50, 100, 200, 500, 1000, 2000, 5000, 10000)
 
 multi <- function(n){
-    fun <- function(x) exp(-x[1] - x[2])
+    fun <- function(x) {exp(-x[1] - x[2])}
     i = 1
     for (i in 1:length(k)) {
         U <- matrix(runif(n = 2*k[i]), ncol = 2)
