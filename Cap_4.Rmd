@@ -1,0 +1,122 @@
+---
+title: "Capitulo 4"
+author: "Pedro Pablo Villegas"
+date: "2/10/2019"
+output: html_document
+---
+
+# GENERACION DE VARIABLES ALEATORIAS DISCRETAS
+
+## Metodo de la transformada inversa
+
+### Variable uniforme discreta
+
+```{r, eval=TRUE, echo=TRUE}
+
+# variable aleatoria discreta -----------
+
+runif.discrete <- function(n, k){ #n simulaciones, k espacios
+    u <- runif(n)
+    x <- floor(k * u) + 1
+    return(x)
+}
+
+# permutacion ----------------
+
+permutacion <- function(m) { # m tamaño grupo
+    if (m == 1) stop("Error")
+        x <- seq(1, m)
+        for (i in 2:m) {
+            j <- runif.discrete(n = 1, k = i - 1)
+            temp <- x[i]
+            x[i] <- x[j]
+            x[j] <- temp
+        }
+    x
+}
+```
+
+
+# Pagina 50 Simulacion 
+
+Another way to generate a random permutation is to generate n random numbers U1, . . . , Un, order them, and then use the indices of the successive values as the random permutation. For instance, if n = 4, and U1 = 0.4, U2 = 0.1, U3 = 0.8, U4 = 0.7, then, because U2 < U1 < U4 < U3, the random permutation is 2, 1, 4, 3. The difficulty with this approach, however, is that ordering the random numbers typically requires on the order of n log(n) comparisons. 
+
+```{r, eval=TRUE, echo=TRUE}
+
+runif.discrete2 <- function(n){
+    res <- matrix(nrow = n, ncol = 2)
+    i <- 1
+    while (i <= n) {
+        res[i, 1] <- i
+        res[i, 2] <- runif(1)
+        i <- i + 1
+    }
+    res[order(res[,2])]
+}
+
+```
+
+## Geometric distribution
+
+```{r, eval=TRUE, echo=TRUE}
+
+r.geom <- function(n, p) {
+    u <- runif(n)
+    x <- floor(log(u) / log(1 - p)) + 1
+    return(x)
+}
+
+```
+
+## Poisson distribution
+
+```{r, eval=TRUE, echo=TRUE}
+
+one.poisson <- function(u, lambda) {
+    p <- exp(-lambda)
+    F <- p
+    i <- 0
+    while (u >= F) {
+        i <- i + 1
+        p <- p * lambda / i
+        F <- F + p
+        }
+    return(i)
+}
+
+
+one.poisson <- Vectorize(one.poisson)
+
+r.pois <- function(n, lambda) {
+    one.poisson(runif(n), lambda)
+}
+
+```
+
+## Binomial distribution
+
+```{r, eval=TRUE, echo=TRUE}
+
+one.binom <- function(u, p, size) {
+    K <- p/(1 - p)
+    p <- (1 - p)^size
+    Acumul <- p
+    i <- 0
+    while (u > Acumul) {
+        p <- p * K * (size - i)/(i + 1)
+        Acumul <- Acumul + p
+        i <- i + 1
+        }
+    return(i)
+}
+
+one.binom <- Vectorize(one.binom)
+
+r.binom <- function(n, p, size) {
+    one.binom(u = runif(n), p, size)
+}
+
+```
+
+# Metodo de aceptacion y rechazo
+

@@ -1,0 +1,10 @@
+@book{Ross2013,
+    address = {San Diego},
+    author = {Ross, Sheldon M.},
+    edition = {5},
+    isbn = {978-0-12-415825-2},
+    keywords = {icle},
+    publisher = {Academic Press},
+    title = {{Simulation}},
+    year = {2013}
+}

@@ -1,0 +1,81 @@
+---
+title: "Parcial_1"
+author: "Pedro Pablo Villegas Echavarria"
+date: "3/10/2019"
+output: html_document
+---
+
+# Punto 1
+
+$$
+Bin(n = k, p = 0.64)
+$$
+
+Explorar la tasa de cobertura del intervalo de confianza de Wald para estimar la proporción $p$ de una variable aleatoria binomial.
+
+* Simule 10000 muestras de tamaño _k_ y con cada una determine el intervalo de confianza de Wald del _90%_
+
+* Determine si el parámetro p está en el intervalo
+
+* Calcule el porcentaje de veces que _p_ pertenece al intervalo
+
+k (10, 20, 30, 40, 50, 100)
+
+# Punto 2
+
+* un dado de 6 caras cargado con probabilidad proporcional a su número
+
+```{r, eval=TRUE, echo=TRUE}
+
+simul.dado.uno <- function(k){ # k son los números que quiero sacar
+    p <- 1/21
+    ifelse(k < 6*p, 6,
+           ifelse(k < 11*p, 5,
+                  ifelse(k < 15*p, 4,
+                         ifelse(k < 18*p, 3,
+                                ifelse(k < 20*p, 2, 1)))))
+}
+
+simul.dado.6 <- function(m){ # n es el número de intentos m son las simula 
+    intentos <- numeric(m)
+    j <- 0
+    while (j < m) {
+        j <- j + 1
+        i <- 0
+        while (simul.dado.uno(runif(1)) < 6) {
+            i <- i + 1
+        }
+        intentos[j] <- i
+    }
+    media <- mean(intentos)
+    varianza <- var(intentos)
+    return(list(media, varianza))
+}
+```
+
+* Un dado no cargado de seis caras tiene 4 caras color green y dos color red
+Se lanza hasta que aparece la secuencia R R R G G G
+
+```{r, eval=TRUE, echo=TRUE}
+
+caras.una <- function(k = 1){
+    ifelse(floor(runif(k, 1, 7)) <= 4, 1, 2)
+}
+
+veces <- function(m = 1000) {
+    x <- 1:m
+    i <- 6
+    while (mean(x[i - 5:i - 3]) == 1 & mean(x[i - 2:i] == 2)) {
+        x[1:5] <- 0
+        x[i] <- caras.una(1)
+        i <- i + 1
+    }
+    i
+}
+
+sstr <- c("c","ab","B","bba","c",NA,"@","bla","a","Ba","%")
+sstr[sstr %in% c(letters, LETTERS)]
+
+
+
+```

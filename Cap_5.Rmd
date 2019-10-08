@@ -1,10 +1,99 @@
 ---
-title: "Clase_5"
+title: "Capitulo 5"
 author: "Pedro Pablo Villegas"
 date: "29/9/2019"
 output: pdf_document
 ---
 
+# MÉTODO DE LA TRANSFORMADA INVERSA
+
+Sea $U \sim U(0, 1)$, para cualquier función de distribución acumulada continua $F$, la variable aleatoria $X$ se define como:
+
+$$
+X = F^{-1}(U)
+$$
+
+La cual tiene 
+
+## Exponencial
+
+Consider the exponential distribution with probability density function given by $f(x) = \lambda exp(-\lambda x)$. Write an R function to simulate from an exponential function with $\lambda = 1$.
+
+$$
+X \sim Exp(\lambda)
+$$
+con función de densidad de probabilidad $f(x)$ tal que:
+
+$$
+f(x) = \lambda exp^{\lambda(-x)}
+$$
+
+y función de probabilidad acumulada $F(X)$
+
+$$
+F(X) =  1 - exp^{\lambda (-x)}
+$$
+
+Si $\lambda = 1$ tenemos $F(X) = 1 - exp^{-x}$
+
+$$
+\begin{aligned}
+F(X) &= 1- exp^{-x} \\
+U &= 1 - exp^{-x} \\
+exp^{-x} &= 1 - U \\
+log(exp^{-x}) &= log(1-U) \\
+- x &= log(1-U) \\
+x &= -log(1-U) \\
+x &= -log(U)
+\end{aligned}
+$$
+
+```{r, eval=TRUE, echo=TRUE}
+r.exp <- function(n, lambda = 1){
+    u <- runif(n)
+    x <- -log(u) / lambda
+    return(x)
+}
+```
+
+## Proceso de Poisson
+
+Suponga que los eventos ocurren en un tiempo aleatorio y sea $N(t)$ el número de eventos que ocurren en un intervalo de tiempo $[0, t]$. Se dice que estos eventos constitutyen un _proceso de Poisson con tasa_ $\lambda, \lambda > 0$ si:
+
+* $N(0)=0$
+* El número de eventos que ocurren diferentes intervalos de tiempo son independientes.
+* La distribución del número de eventos que ocurren en un intervalo dado, depende únicamente de la longitud del intervalo y no de su ubicación.
+* $\lim_{h\to0}\frac{P\big(N(h)=1\big)}{h} = \lambda$
+* $\lim_{h\to0}\frac{P\big (N(h) \geq 2 \big)}{h} = 0$
+
+Para un proceso de Poisson, sea $X_{1}$ el tiempo del primer evento y $X_{n}$ el tiempo transcurrido entre los eventos $(n-1)$ y $n$. La secuencia $\{X_{n}, n = 1, 2, \ldots\}$ se denomina secuencia de tiempos de llegada, los cuales son variables aleatorias independientes e identicamente distribuidos con $fdp(x)$ exponencial con parámetro $\lambda$
+
+Si $N(1)$ es el número de eventos que ocurren en el tiempor $1$, y está distribuído Poisson con parámetro $\lambda$, se puede expresar de la siguiente manera:
+
+$$
+N(1) = Max\bigg\{n: \sum_{i=1}^{n} X_{i}\leq 1 \bigg\}
+$$
+
+Del ejercicio anterior, tenemos que $X = -\frac{log(U)}{\lambda}$ por lo tanto:
+
+$$
+\begin{equation}
+N(1) = Max\bigg\{n: \sum_{i=1}^{n} X_{i}\leq 1 \bigg\} \\
+= Max\bigg\{n: \sum_{i=1}^{n} -\frac{log(U_{i})}{\lambda} \leq 1 \bigg\} \\
+= Max\bigg\{n: \sum_{i=1}^{n} log(U_{i}) \geq -\lambda \bigg\} \\
+= Max\bigg\{n: log(U_{1}\ldots U_{n}) \geq -\lambda \bigg\} \\
+= Max\bigg\{n: U_{1}\ldots U_{n} \geq exp^{-\lambda} \bigg\} \\
+\end{equation}
+$$
+
+Podemos concluir que para obtener __una__ un valor aleatorio de una Poisson con $\lambda$ debemos calcular:
+
+$$
+N(1) = Min\big\{ U_{1} \ldots U_{n} \leq exp^{-\lambda} \big\}
+$$
+
+```{r, eval=TRUE, echo=TRUE}
+```
 
 
 ```{r, eval=FALSE, include=FALSE}
@@ -33,13 +122,3 @@ summary(mod.r)
 
 
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
